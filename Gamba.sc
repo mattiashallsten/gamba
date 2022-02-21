@@ -29,10 +29,32 @@ GambaString {
 
 		last_node_id = parent.server.nextNodeID;
 		
-		parent.server.sendMsg("/s_new", synthdef.asString, last_node_id, 1, 1,
+		parent.server.sendMsg("/s_new",
+			synthdef.asString,     // synth definition name
+			last_node_id,	       // synth ID
+			1,				       // add action
+			parent.target.nodeID,  // add target ID
 			"rate", ratio.asNum,
 			"buf", buffer.bufnum,
 			"out", parent.out
+
+			// add actions:
+
+			// 0. add the new node to the the head of the group
+			//    specified by the add target ID.
+
+			// 1. add the new node to the the tail of the group
+			//    specified by the add target ID.
+
+			// 2. add the new node just before the node specified by
+			//    the add target ID.
+
+			// 3. add the new node just after the node specified by
+			//    the add target ID.
+
+			// 4. the new node replaces the node specified by the add
+			//    target ID. The target node is freed.
+
 		);
 		if(parent.debug, {"playing gambastring with node id %".format(last_node_id).postln });
 
@@ -69,12 +91,12 @@ GambaString {
 }
 
 Gamba {
-	var <out, <path, <debug;
+	var <out, <path, <target, <debug;
 	var <server, <frets;
 	var <buffers, <strings;
 
-	*new {| out = 0, path, debug = false |
-		^super.newCopyArgs(out, path, debug).init;
+	*new {| out = 0, path, target, debug = false |
+		^super.newCopyArgs(out, path, target, debug).init;
 	}
 
 	init {
@@ -96,10 +118,12 @@ Gamba {
 		];
 
 		forkIfNeeded {
+			target = target ? server.defaultGroup;
 			buffers = (path ++ "/samples/*.wav").pathMatch.collect{|p|
 				if(debug, { "in 'Gamba.init': loading buffer with path %...".format(p).postln; });
 				Buffer.read(server, p);
 			};
+
 			server.sync;
 
 			strings = buffers.collect{|buf, i|
