@@ -104,6 +104,7 @@ Gamba {
 		"// Gamba.sc //".postln;
 		"//////////////".postln;
 		server = Server.local;
+		if(out.class == Bus, { out = out.index });
 		path = path ? Platform.userExtensionDir ++ "/gamba";
 		if(debug, { "in 'Gamba.init': initializing gamba with path %...".format(path).postln});
 		frets = [
