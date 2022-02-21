@@ -122,7 +122,7 @@ Gamba {
 			target = target ? server.defaultGroup;
 			buffers = (path ++ "/samples/*.wav").pathMatch.collect{|p|
 				if(debug, { "in 'Gamba.init': loading buffer with path %...".format(p).postln; });
-				Buffer.read(server, p);
+				Buffer.readOnServer(server, p);
 			};
 
 			server.sync;
