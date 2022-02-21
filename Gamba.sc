@@ -133,6 +133,15 @@ Gamba {
 				});
 				GambaString(buf, i, "gamba_mono", this.value);
 			};
+
+			server.sync;
+
+			if(debug, {
+				"in 'Gamba.init': finished loading strings and buffers.
+\tnumber of buffers loaded: %
+\tnumber of strings loaded: %".format(buffers.size, strings.size).postln;
+			});
+			
 			this.loadSynthDefs;
 		}
 	}
