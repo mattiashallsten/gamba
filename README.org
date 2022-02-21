@@ -1,0 +1,35 @@
+#+title: Gamba
+The file [[./Gamba.sc]] contains the two classes =Gamba= and
+=GambaString=, used for playing the virtual viola da gamba.
+
+* Installation
+Copy this repository to your user extension path, found by running:
+
+#+begin_src sclang
+Platform.userExtensionDir;
+#+end_src
+
+* Usage
+Start the gamba:
+
+#+begin_src sclang
+g = Gamba();
+#+end_src
+
+Play the second fret of the first string:
+
+#+begin_src sclang
+g.play(3, 2);
+#+end_src
+
+Stop the first string:
+
+#+begin_src sclang
+g.stop(3);
+#+end_src
+
+Play the 0th fret of the fourth string, repeat indefinately:
+
+#+begin_src sclang
+g.play(4, 0, true);
+#+end_src
