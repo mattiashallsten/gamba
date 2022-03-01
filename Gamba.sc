@@ -4,7 +4,7 @@ GambaString {
 	var last_node_id, looper;
 	var buffer_time;
 
-	*new {| buffer, num, synthdef, parent|
+	*new {| buffer, num, synthdef, parent |
 		^super.newCopyArgs(buffer, num, synthdef, parent).init;
 	}
 
@@ -56,7 +56,7 @@ GambaString {
 			//    target ID. The target node is freed.
 
 		);
-		if(parent.debug, {"playing gambastring with node id %".format(last_node_id).postln });
+		if(parent.debug, {"in 'GambaString.play': playing gambastring with node id %".format(last_node_id).postln });
 
 		if(repeat, {
 			buffer_time = buffer.numFrames / buffer.sampleRate / ratio.asNum;
@@ -92,6 +92,7 @@ GambaString {
 
 Gamba {
 	var <out, <path, <target, <debug;
+	var master_tune = 1;
 	var <server, <frets;
 	var <buffers, <strings;
 
@@ -147,11 +148,16 @@ Gamba {
 	}
 
 	play {| string = 0, fret = 0, repeat = false |
+		// Play gamba on string 'string' and fret 'fret'. If 'repeat'
+		// is true, repeat the sample after it has finished playing.
+		
 		if(debug, { "in 'Gamba.play': playing string: % on fret %...".format(string, fret).postln; });
 		strings.clipAt(string).play(frets.clipAt(fret), repeat);
 	}
 
 	stop {| string = 0 |
+		// Stop gamba on string 'string'.
+		
 		if(debug, { "in 'Gamba.stop': stopping string %...".format(string).postln; });
 		strings.clipAt(string).stop;
 	}
@@ -171,6 +177,50 @@ Gamba {
 			sig = sig * env * amp;
 			Out.ar(out, sig);
 		}).add;
+		SynthDef(\gamba_analyze, {
+			| in = 0
+			, out = 0
+			|
+			var sig = In.ar(in);
+			var freq, hasFreq;
+
+			#freq, hasFreq = Tartini.kr(sig);
+
+			SendReply.kr(Impulse.kr(5), "/gamba_freq", freq);
+
+			Out.ar(out, sig);
+		}).add;
 	}
-	
+
+	tune {| string = 0, fret = 0 |
+		// Play string 'string' and fret 'fret', and show a window
+		// displaying the frequency.
+
+		{
+			var freq_text = StaticText().font_(Font.monospace);
+			var freq_window = Window.new("Freq", Rect(100, 100, 300, 100))
+			.layout_(HLayout(freq_text))
+			.onClose_{
+				analyze_synth.free;
+				analyze_group.free;
+				this.stop(string);
+				analyze_osc_func.free;
+			};
+
+			var analyze_group = Group(target, \addAfter);
+			var analyze_synth, analyze_osc_func;
+
+			freq_window.front;
+			
+			server.sync;
+			analyze_synth = Synth(\gamba_analyze, [\in, out, \out, out], analyze_group);
+
+			this.play(string, fret, true);
+
+			analyze_osc_func = OSCFunc({|msg|
+				var freq = msg[3].round(0.01);
+				{ freq_text.string_("Freq on string %, fret %:\n% Hz".format(string, fret, freq.asString)); }.fork(AppClock);
+			}, "/gamba_freq");
+		}.fork(AppClock)
+	}
 }
